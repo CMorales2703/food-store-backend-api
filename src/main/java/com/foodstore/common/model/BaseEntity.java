@@ -7,6 +7,7 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Version;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -26,6 +27,7 @@ public abstract class BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Builder.Default
     private boolean eliminado = false;
 
     @CreationTimestamp
