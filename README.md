@@ -1,58 +1,33 @@
 # Food Store Backend API - TPI Programacion 3
 
-Food Store Backend API es la API REST del sistema Food Store, desarrollada como parte del Trabajo Practico Integrador de Programacion 3.
+API REST del sistema Food Store, desarrollada como parte del Trabajo Practico Integrador de Programacion 3 (UTN - Tecnicatura Universitaria en Programacion).
 
-El objetivo final del TPI es construir un sistema full stack donde el frontend pueda consumir datos reales del backend para registrar usuarios, iniciar sesion, listar categorias, listar productos, crear pedidos y consultar el estado/historial de compras.
+El sistema permite registrar usuarios, iniciar sesion, gestionar categorias y productos, y crear pedidos con control de stock transaccional.
 
 ## Estado del proyecto
 
-Este repositorio contiene la base inicial del backend del sistema. La idea es usarlo como punto de partida para implementar las historias de usuario de la consigna relacionadas con categorias, usuarios, productos, pedidos e infraestructura.
+Backend completamente implementado. Todos los modulos estan operativos y documentados.
 
-Actualmente incluye:
-
-- Proyecto base con Spring Boot y Gradle.
-- Estructura inicial por capas.
-- Configuracion base en `application.properties`.
-- CORS preparado para consumir desde Vite.
-- Entidad base con auditoria, versionado y soft delete.
-- Excepciones base y manejador global.
-- Servicio de encriptacion con BCrypt.
-- Endpoint inicial de salud: `GET /api/health`.
-
-Pendiente principal:
-
-- Agregar Gradle Wrapper.
-- Implementar entidades JPA del dominio.
-- Implementar repositorios, servicios, DTOs y controladores REST.
-- Conectar con base de datos final.
-- Completar Swagger/OpenAPI con los endpoints reales.
-- Probar integracion con el frontend.
+- Infraestructura base (entidad base, repositorio base, excepciones, BCrypt, CORS, Swagger)
+- CRUD completo de Categorias (HU-001 a HU-005)
+- CRUD completo de Usuarios + Autenticacion (HU-006 a HU-010)
+- CRUD completo de Productos con filtro por categoria (HU-011 a HU-016)
+- CRUD completo de Pedidos con creacion transaccional y control de stock (HU-017 a HU-022)
+- Documentacion Swagger/OpenAPI disponible en `/swagger-ui.html`
 
 ## Tecnologias
 
-### Backend
-
-- Java 17+
-- Spring Boot 3.x
-- Spring Web
-- Spring Data JPA
-- Bean Validation
+- Java 17
+- Spring Boot 3.3.5
+- Spring Web / Spring Data JPA
+- Bean Validation (Jakarta)
 - Lombok
-- Gradle
-- H2 Database
-- PostgreSQL o MySQL
-- BCrypt
-- Swagger/OpenAPI
+- Gradle 8.8
+- H2 Database (desarrollo) / PostgreSQL (produccion)
+- BCrypt (spring-security-crypto)
+- SpringDoc OpenAPI 2.6.0
 
-### Frontend
-
-- HTML5
-- CSS3
-- TypeScript
-- Vite
-- LocalStorage
-
-## Estructura actual
+## Estructura del proyecto
 
 ```text
 food-store-backend-api/
@@ -61,15 +36,19 @@ food-store-backend-api/
 |   |   +-- java/
 |   |   |   +-- com/foodstore/
 |   |   |       +-- common/
-|   |   |       |   +-- exception/
-|   |   |       |   +-- model/
-|   |   |       |   +-- security/
-|   |   |       +-- config/
-|   |   |       +-- health/
-|   |   |       +-- category/
-|   |   |       +-- user/
-|   |   |       +-- product/
-|   |   |       +-- order/
+|   |   |       |   +-- enums/       (Rol, Estado, FormaPago)
+|   |   |       |   +-- exception/   (GlobalExceptionHandler, excepciones)
+|   |   |       |   +-- interfaces/  (Calculable)
+|   |   |       |   +-- model/       (BaseEntity)
+|   |   |       |   +-- repository/  (BaseRepository)
+|   |   |       |   +-- security/    (PasswordService)
+|   |   |       +-- config/          (CorsConfig, OpenApiConfig)
+|   |   |       +-- health/          (HealthController)
+|   |   |       +-- auth/            (AuthController)
+|   |   |       +-- category/        (model, repository, dto, service, controller)
+|   |   |       +-- user/            (model, repository, dto, service, controller, init)
+|   |   |       +-- product/         (model, repository, dto, service, controller)
+|   |   |       +-- order/           (model, repository, dto, service, controller)
 |   |   |       +-- FoodStoreBackendApiApplication.java
 |   |   +-- resources/
 |   |       +-- application.properties
@@ -79,109 +58,95 @@ food-store-backend-api/
 +-- README.md
 ```
 
-## Como ejecutar el backend
-
-Cuando el proyecto tenga Gradle Wrapper:
+## Como ejecutar
 
 ```bash
+# Linux / Mac
 ./gradlew bootRun
-```
 
-En Windows:
-
-```bash
+# Windows
 gradlew.bat bootRun
 ```
 
-Si se usa Gradle instalado globalmente:
+La API levanta en `http://localhost:8080`.
 
-```bash
-gradle bootRun
+Usuario administrador creado automaticamente al iniciar:
+- Email: `admin@admin.com`
+- Password: `123456`
+
+## Documentacion
+
+Con la API corriendo:
+
+```
+Swagger UI:  http://localhost:8080/swagger-ui.html
+API Docs:    http://localhost:8080/api-docs
+H2 Console:  http://localhost:8080/h2-console
 ```
 
-Importante: en esta maquina se detecto Java instalado, pero no `gradle` global. Por eso el proximo paso tecnico recomendado es agregar Gradle Wrapper o regenerar la base desde Spring Initializr con wrapper incluido.
+H2 Console (solo desarrollo):
+- JDBC URL: `jdbc:h2:mem:foodstore`
+- Usuario: `sa` / Password: (vacio)
 
-## Endpoints iniciales
+## Endpoints
 
-```text
-GET /api/health
+### Autenticacion
 ```
-
-Swagger, una vez levantada la API:
-
-```text
-http://localhost:8080/swagger-ui.html
-http://localhost:8080/api-docs
+POST /api/auth/register   Registrar nuevo usuario
+POST /api/auth/login      Iniciar sesion
 ```
-
-## Modulos del backend
-
-### Infraestructura
-
-- Entidad base.
-- Repositorio base.
-- Manejo global de excepciones.
-- Encriptacion de contrasenas.
-- Carga inicial de admin.
-- Swagger/OpenAPI.
-- CORS.
 
 ### Categorias
-
-- Crear categoria.
-- Listar categorias.
-- Obtener categoria por ID.
-- Actualizar categoria.
-- Eliminar categoria con soft delete.
+```
+GET    /api/categories        Listar todas
+GET    /api/categories/{id}   Obtener por ID
+POST   /api/categories        Crear
+PUT    /api/categories/{id}   Actualizar (parcial)
+DELETE /api/categories/{id}   Eliminar (soft delete)
+```
 
 ### Usuarios
-
-- Registrar usuario.
-- Listar usuarios.
-- Obtener usuario por ID.
-- Actualizar usuario.
-- Eliminar usuario con soft delete.
+```
+GET    /api/users        Listar todos
+GET    /api/users/{id}   Obtener por ID
+PUT    /api/users/{id}   Actualizar (parcial)
+DELETE /api/users/{id}   Eliminar (soft delete)
+```
 
 ### Productos
-
-- Crear producto.
-- Listar productos.
-- Obtener producto por ID.
-- Listar productos por categoria.
-- Actualizar producto.
-- Eliminar producto con soft delete.
+```
+GET    /api/products                  Listar todos
+GET    /api/products/{id}             Obtener por ID
+GET    /api/products/category/{id}    Listar por categoria
+POST   /api/products                  Crear
+PUT    /api/products/{id}             Actualizar (parcial)
+DELETE /api/products/{id}             Eliminar (soft delete)
+```
 
 ### Pedidos
-
-- Crear pedido.
-- Listar pedidos.
-- Obtener pedido por ID.
-- Listar pedidos por usuario.
-- Actualizar estado de pedido.
-- Eliminar pedido con soft delete.
-
-## Repositorios oficiales del TPI
-
-Frontend:
-
-```text
-https://github.com/CMorales2703/food-store-frontend
+```
+GET    /api/orders              Listar todos
+GET    /api/orders/{id}         Obtener por ID
+GET    /api/orders/user/{id}    Listar por usuario
+POST   /api/orders              Crear (transaccional, reduce stock)
+PUT    /api/orders/{id}         Actualizar estado / forma de pago
+DELETE /api/orders/{id}         Eliminar (soft delete)
 ```
 
-Backend:
-
-```text
-https://github.com/CMorales2703/food-store-backend-api
+### Utilidades
+```
+GET /api/health   Estado del servidor
 ```
 
-## Datos del estudiantes
+## Repositorios
 
-- Nombres y Apellidos: Diego R. Montes, Ramiro Morales y Cristian R. Morales
+```
+Backend:  https://github.com/CMorales2703/food-store-backend-api
+Frontend: https://github.com/CMorales2703/food-store-frontend
+```
+
+## Datos del equipo
+
+- Integrantes: Diego R. Montes, Ramiro Morales y Cristian R. Morales
 - Comision: 04
-- Materia: Programacion III
-
-## Video de presentacion
-
-Pendiente de actualizar para el TPI final.
-
-El video final debe durar entre 10 y 15 minutos y comenzar con presentacion con camara encendida.
+- Materia: Programacion III - UTN
